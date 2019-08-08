@@ -1,0 +1,66 @@
+MEMORY
+{
+    ROM (rx)    : ORIGIN = 0x00100000, LENGTH = 0x40000
+    SPRAM (xrw) : ORIGIN = 0x00000000, LENGTH = 0x20000
+}
+ENTRY(_start)
+SECTIONS {
+    .boot :
+    {
+        . = ALIGN(4);
+        *(.text.start)
+        . = ALIGN(4);
+	_sitext = .;
+        _sidata = . + _etext - _stext;
+    } >ROM
+
+    .text : AT (_sitext)
+    {
+        . = ALIGN(4);
+	_stext = .;
+        *(.text)
+        *(.text*)
+        *(.rodata)
+        *(.rodata*)
+        *(.srodata)
+        *(.srodata*)
+        . = ALIGN(4);
+        _etext = .;
+    } >SPRAM
+    .data : AT ( _sidata )
+    {
+        . = ALIGN(4);
+        _sdata = .;
+        _ram_start = .;
+        . = ALIGN(4);
+        *(.data)
+        *(.data*)
+        *(.sdata)
+        *(.sdata*)
+        . = ALIGN(4);
+        _edata = .;
+    } >SPRAM
+    .bss :
+    {
+        . = ALIGN(4);
+        _sbss = .;
+        *(.bss)
+        *(.bss*)
+        *(.sbss)
+        *(.sbss*)
+        *(COMMON)
+        . = ALIGN(4);
+        _ebss = .;
+    } >SPRAM
+    .heap :
+    {
+        . = ALIGN(4);
+        _heap_start = .;
+    } >SPRAM
+
+    /*
+     * The .eh_frame section appears to be used for C++ exception handling.
+     * You may need to fix this if you're using C++.
+     */
+    /DISCARD/ : { *(.eh_frame) }
+}
